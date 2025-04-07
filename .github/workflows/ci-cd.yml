@@ -28,7 +28,7 @@ jobs:
         run: |
           mvn clean install -DskipTests
           mvn clean package -DskipTests
-          mvn exec:java -pl modules/cloudsim-examples/ -Dexec.mainClass=org.cloudbus.cloudsim.examples.CloudSimPlusExample
+          mvn exec:java -pl modules/cloudsim-examples/ -Dexec.mainClass=org.cloudbus.cloudsim.examples.CloudSimPlusExample > $GITHUB_WORKSPACE/output/simulation_results.txt 2>&1
 
 
       - name: Display Simulation Results
