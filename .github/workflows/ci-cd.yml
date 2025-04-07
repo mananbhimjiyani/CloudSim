@@ -22,9 +22,17 @@ jobs:
       - name: Build with Maven
         run: mvn clean package
 
+      - name: Enable Debug Logging
+        run: echo "ACTIONS_STEP_DEBUG=true" >> $GITHUB_ENV
+
       - name: Run CloudSim Simulation
         run: |
           mvn exec:java -pl modules/cloudsim-examples/ -Dexec.mainClass=org.cloudbus.cloudsim.examples.CloudSimPlusExample > $GITHUB_WORKSPACE/simulation_results.txt 2>&1
+
+      - name: Display Simulation Results
+        run: cat $GITHUB_WORKSPACE/simulation_results.txt
+
+        
       - name: Upload Simulation Results
         uses: actions/upload-artifact@v4
         with:
