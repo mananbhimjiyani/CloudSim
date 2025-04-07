@@ -23,19 +23,30 @@ jobs:
         run: |
           mkdir -p $GITHUB_WORKSPACE/output
           chmod 777 $GITHUB_WORKSPACE/output
+          ls -la $GITHUB_WORKSPACE/output  # Verify directory exists
+
+      - name: Build and Install All Modules
+        run: |
+          mvn clean install -DskipTests
 
       - name: Build and Run Simulation
         run: |
-          mvn clean install -DskipTests
           mvn clean package -DskipTests
-          mvn exec:java -pl modules/cloudsim-examples/ -Dexec.mainClass=org.cloudbus.cloudsim.examples.CloudSimPlusExample > $GITHUB_WORKSPACE/output/simulation_results.txt 2>&1
-
+          mvn exec:java -pl modules/cloudsim-examples -Dexec.mainClass=org.cloudbus.cloudsim.examples.CloudSimPlusExample > $GITHUB_WORKSPACE/output/simulation_results.txt 2>&1
+          ls -la $GITHUB_WORKSPACE/output  # Check if file was created
+          cat $GITHUB_WORKSPACE/output/simulation_results.txt  # Preview contents immediately
 
       - name: Display Simulation Results
-        run: cat $GITHUB_WORKSPACE/output/simulation_results.txt
+        run: |
+          if [ -f "$GITHUB_WORKSPACE/output/simulation_results.txt" ]; then
+            cat $GITHUB_WORKSPACE/output/simulation_results.txt
+          else
+            echo "Simulation results file not found!"
+          fi
 
       - name: Upload Simulation Results
         uses: actions/upload-artifact@v4
         with:
           name: simulation-results
           path: $GITHUB_WORKSPACE/output/simulation_results.txt
+          if-no-files-found: warn
