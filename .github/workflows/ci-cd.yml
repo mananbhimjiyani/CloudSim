@@ -24,6 +24,7 @@ jobs:
 
       - name: Run CloudSim Simulation
         run: mvn exec:java -pl modules/cloudsim-examples/ -Dexec.mainClass=org.cloudbus.cloudsim.examples.CloudSimPlusExample > simulation_results.txt
+        working-directory: /
 
       - name: Upload Simulation Results
         uses: actions/upload-artifact@v4 # Updated to v4
