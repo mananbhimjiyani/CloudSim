@@ -39,9 +39,9 @@ jobs:
             echo "Simulation failed!"
             exit 1
           fi
-          echo "results=$(cat $GITHUB_WORKSPACE/output/simulation_results.txt)" >> $GITHUB_OUTPUT
-          ls -la $GITHUB_WORKSPACE/output  # Check if file was created
           cat $GITHUB_WORKSPACE/output/simulation_results.txt  # Preview contents immediately
+          sanitized_results=$(cat $GITHUB_WORKSPACE/output/simulation_results.txt | tr '\n' ' ' | sed 's/::/-/g')
+          echo "results=$sanitized_results" >> $GITHUB_OUTPUT
 
       - name: Display Simulation Results
         run: |
