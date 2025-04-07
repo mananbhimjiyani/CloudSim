@@ -27,7 +27,6 @@ jobs:
       - name: Build and Install All Modules
         run: |
           mvn clean install -DskipTests
-          mvn clean package -DskipTests
           echo "Build completed successfully"
 
       - name: Run Simulation and Capture Results
@@ -60,19 +59,18 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
-          # Format the message
-          MESSAGE="*CloudSim Simulation Completed Successfully!*\n\n"
+          # Format the message with a mention to trigger notification
+          MESSAGE="<!here> *CloudSim Simulation Completed Successfully!* :white_check_mark:\n\n"
           MESSAGE+="\`\`\`"
           MESSAGE+="${{ steps.simulation.outputs.results }}"
           MESSAGE+="\`\`\`"
           
-          # Send to Slack
+          # Send to Slack with more notification-friendly format
           curl -X POST -H 'Content-type: application/json' \
-            --data "{\"text\":\"$MESSAGE\"}" \
+            --data "{
+              \"text\":\"$MESSAGE\",
+              \"username\":\"GitHub Actions\",
+              \"icon_emoji\":\":github:\",
+              \"mrkdwn\": true
+            }" \
             $SLACK_WEBHOOK
-
-      - name: Upload Results Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: simulation-results
-          path: $GITHUB_WORKSPACE/output/simulation_results.txt
