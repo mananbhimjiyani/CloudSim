@@ -19,49 +19,60 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Create and configure output directory
+      - name: Create output directory
         run: |
           mkdir -p $GITHUB_WORKSPACE/output
-          chmod 777 $GITHUB_WORKSPACE/output
-          ls -la $GITHUB_WORKSPACE/output  # Verify directory exists
-          echo "Output directory created and configured."
+          echo "Output directory created"
 
       - name: Build and Install All Modules
         run: |
           mvn clean install -DskipTests
-          echo "All modules built and installed successfully."
+          mvn clean package -DskipTests
+          echo "Build completed successfully"
 
-      - name: Build and Run Simulation
-        id: simulation_results
+      - name: Run Simulation and Capture Results
+        id: simulation
         run: |
+          # Run simulation and save output
           mvn exec:java -pl modules/cloudsim-examples -Dexec.mainClass=org.cloudbus.cloudsim.examples.CloudSimPlusExample > $GITHUB_WORKSPACE/output/simulation_results.txt 2>&1
+          
+          # Check if simulation succeeded
           if [ $? -ne 0 ]; then
-            echo "Simulation failed!"
+            echo "::error::Simulation failed!"
             exit 1
           fi
-          cat $GITHUB_WORKSPACE/output/simulation_results.txt  # Preview contents immediately
-          sanitized_results=$(cat $GITHUB_WORKSPACE/output/simulation_results.txt | tr '\n' ' ' | sed 's/::/-/g')
-          echo "results=$sanitized_results" >> $GITHUB_OUTPUT
-
-      - name: Display Simulation Results
-        run: |
-          if [ -f "$GITHUB_WORKSPACE/output/simulation_results.txt" ]; then
-            cat $GITHUB_WORKSPACE/output/simulation_results.txt
-          else
-            echo "Simulation results file not found!"
-          fi
+          
+          # Extract just the important results
+          FINAL_RESULTS=$(grep -A 100 "========== FINAL RESULTS ==========" $GITHUB_WORKSPACE/output/simulation_results.txt)
+          POWER_RESULTS=$(grep -A 10 "Total Energy Consumption" $GITHUB_WORKSPACE/output/simulation_results.txt | head -n 4)
+          
+          # Combine and format results
+          COMBINED_RESULTS="$FINAL_RESULTS\n\n$POWER_RESULTS"
+          CLEAN_RESULTS=$(echo "$COMBINED_RESULTS" | sed '/Downloading from/d' | sed '/Progress/d' | sed '/Downloaded/d')
+          
+          # Output for Slack
+          echo "results<<EOF" >> $GITHUB_OUTPUT
+          echo "$CLEAN_RESULTS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Send Slack Notification
-        uses: slackapi/slack-github-action@v1.23.0
+        if: success()
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          # Format the message
+          MESSAGE="*CloudSim Simulation Completed Successfully!*\n\n"
+          MESSAGE+="\`\`\`"
+          MESSAGE+="${{ steps.simulation.outputs.results }}"
+          MESSAGE+="\`\`\`"
+          
+          # Send to Slack
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"$MESSAGE\"}" \
+            $SLACK_WEBHOOK
+
+      - name: Upload Results Artifact
+        uses: actions/upload-artifact@v3
         with:
-          payload: |
-            {
-              "text": "Simulation completed successfully!",
-              "attachments": [
-                {
-                  "title": "Results",
-                  "text": "${{ steps.simulation_results.outputs.results }}"
-                }
-              ]
-            }
-          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          name: simulation-results
+          path: $GITHUB_WORKSPACE/output/simulation_results.txt
