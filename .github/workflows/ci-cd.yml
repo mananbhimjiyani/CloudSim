@@ -24,8 +24,7 @@ jobs:
 
       - name: Run CloudSim Simulation
         run: |
-          mvn exec:java -pl modules/cloudsim-examples/ -Dexec.mainClass=org.cloudbus.cloudsim.examples.CloudSimPlusExample > $GITHUB_WORKSPACE/simulation_results.txt
-
+          mvn exec:java -pl modules/cloudsim-examples/ -Dexec.mainClass=org.cloudbus.cloudsim.examples.CloudSimPlusExample > $GITHUB_WORKSPACE/simulation_results.txt 2>&1
       - name: Upload Simulation Results
         uses: actions/upload-artifact@v4
         with:
