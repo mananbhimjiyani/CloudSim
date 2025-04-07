@@ -24,15 +24,22 @@ jobs:
           mkdir -p $GITHUB_WORKSPACE/output
           chmod 777 $GITHUB_WORKSPACE/output
           ls -la $GITHUB_WORKSPACE/output  # Verify directory exists
+          echo "Output directory created and configured."
 
       - name: Build and Install All Modules
         run: |
           mvn clean install -DskipTests
+          echo "All modules built and installed successfully."
 
       - name: Build and Run Simulation
+        id: simulation_results
         run: |
-          mvn clean package -DskipTests
           mvn exec:java -pl modules/cloudsim-examples -Dexec.mainClass=org.cloudbus.cloudsim.examples.CloudSimPlusExample > $GITHUB_WORKSPACE/output/simulation_results.txt 2>&1
+          if [ $? -ne 0 ]; then
+            echo "Simulation failed!"
+            exit 1
+          fi
+          echo "results=$(cat $GITHUB_WORKSPACE/output/simulation_results.txt)" >> $GITHUB_OUTPUT
           ls -la $GITHUB_WORKSPACE/output  # Check if file was created
           cat $GITHUB_WORKSPACE/output/simulation_results.txt  # Preview contents immediately
 
@@ -44,9 +51,17 @@ jobs:
             echo "Simulation results file not found!"
           fi
 
-      - name: Upload Simulation Results
-        uses: actions/upload-artifact@v4
+      - name: Send Slack Notification
+        uses: slackapi/slack-github-action@v1.23.0
         with:
-          name: simulation-results
-          path: $GITHUB_WORKSPACE/output/simulation_results.txt
-          if-no-files-found: warn
+          payload: |
+            {
+              "text": "Simulation completed successfully!",
+              "attachments": [
+                {
+                  "title": "Results",
+                  "text": "${{ steps.simulation_results.outputs.results }}"
+                }
+              ]
+            }
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
