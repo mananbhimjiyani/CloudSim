@@ -290,8 +290,8 @@ for (int i = 0; i < Math.min(10, powerOverTime.size()); i++) {
 }
 
 
-        generatePowerUsageChart(); // generate and save PNG chart
-        System.out.println("Power usage chart generated.");
+        // generatePowerUsageChart(); // generate and save PNG chart
+        // System.out.println("Power usage chart generated.");
     }
 }
     
