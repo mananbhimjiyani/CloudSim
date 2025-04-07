@@ -19,6 +19,12 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Build CloudSim core first
+        run: |
+          cd modules/cloudsim
+          mvn clean install -DskipTests
+          cd ../..
+
       - name: Build with Maven
         run: mvn clean package
 
