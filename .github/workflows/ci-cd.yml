@@ -1,0 +1,32 @@
+name: CI/CD Pipeline for CloudSim Simulation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-simulate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'openjdk'
+
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
+
+      - name: Run CloudSim Simulation
+        run: mvn exec:java -pl modules/cloudsim-examples/ -Dexec.mainClass=org.cloudbus.cloudsim.examples.CloudSimPlusExample > simulation_results.txt
+
+      - name: Upload Simulation Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: simulation-results
+          path: simulation_results.txt
