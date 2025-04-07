@@ -72,7 +72,7 @@ jobs:
             $SLACK_WEBHOOK
 
       - name: Upload Results Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: simulation-results
           path: $GITHUB_WORKSPACE/output/simulation_results.txt
