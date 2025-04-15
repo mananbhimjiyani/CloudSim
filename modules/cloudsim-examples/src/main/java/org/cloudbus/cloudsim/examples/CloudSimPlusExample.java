@@ -58,7 +58,7 @@ public class CloudSimPlusExample {
 
     private static final int HOSTS = 5;
     private static final int VMS = 10;
-    private static final int CLOUDLETS = 20;
+    private static final int CLOUDLETS = 15;
     private static final double SCHEDULING_INTERVAL = 1.0;
     private static double totalEnergy = 0.0;
     private static Datacenter datacenter;
@@ -290,8 +290,8 @@ for (int i = 0; i < Math.min(10, powerOverTime.size()); i++) {
 }
 
 
-        // generatePowerUsageChart(); // generate and save PNG chart
-        // System.out.println("Power usage chart generated.");
+        generatePowerUsageChart(); // generate and save PNG chart
+        System.out.println("Power usage chart generated.");
     }
 }
     
